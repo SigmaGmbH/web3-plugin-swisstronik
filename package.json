@@ -23,7 +23,7 @@
     "url": "git@github.com:SigmaGmbH/web3-plugin-swisstronik.git"
   },
   "dependencies": {
-    "@swisstronik/utils": "^1.1.1"
+    "@swisstronik/utils": "^1.2.0"
   },
   "devDependencies": {
     "@chainsafe/eslint-config": "^2.0.0",

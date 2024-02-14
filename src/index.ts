@@ -1,12 +1,5 @@
-import { Web3EthPluginBase, Web3, FMT_BYTES, FMT_NUMBER, ETH_DATA_FORMAT } from "web3";
-import {
-  decryptECDH,
-  deriveEncryptionKey,
-  encryptECDH, hexToU8a,
-  stringToU8a, u8aToHex,
-  USER_KEY_PREFIX
-} from "@swisstronik/utils";
-import { randomBytes } from "tweetnacl";
+import { ETH_DATA_FORMAT, Web3, Web3EthPluginBase } from "web3";
+import { decryptNodeResponseWithPublicKey, encryptDataFieldWithPublicKey } from "@swisstronik/utils";
 import {
   Address,
   BlockNumberOrTag,
@@ -21,9 +14,9 @@ import {
   TransactionWithToLocalWalletIndex
 } from "web3-types";
 import {
-  sendTransaction as vanillaSendTransaction,
   call as vanillaCall,
-  estimateGas as vanillaEstimateGas
+  estimateGas as vanillaEstimateGas,
+  sendTransaction as vanillaSendTransaction
 } from "web3-eth";
 import { format } from "web3-utils";
 import { SendTransactionOptions } from "web3-eth/src/types";
@@ -61,7 +54,8 @@ export class SwisstronikPlugin extends Web3EthPluginBase {
     options?: SendTransactionOptions
   ) {
     if (transaction.data && transaction.to) {
-      let [encryptedData] = await this.encryptDataField(transaction.data);
+      let nodePublicKey = await this.getNodePublicKey();
+      let [encryptedData] = encryptDataFieldWithPublicKey(nodePublicKey, transaction.data);
       transaction.data = encryptedData;
     }
     return vanillaSendTransaction(this, transaction, returnFormat, options);
@@ -73,10 +67,11 @@ export class SwisstronikPlugin extends Web3EthPluginBase {
     returnFormat: ReturnFormat = DEFAULT_RETURN_FORMAT as ReturnFormat
   ) {
     if (transaction.data && transaction.to) {
-      let [encryptedData, encryptionKey] = await this.encryptDataField(transaction.data);
+      let nodePublicKey = await this.getNodePublicKey();
+      let [encryptedData, encryptionKey] = encryptDataFieldWithPublicKey(nodePublicKey, transaction.data);
       transaction.data = encryptedData;
       let result = await vanillaCall(this, transaction, blockNumber, returnFormat);
-      let decrypted = await this.decryptNodeResponse(result, encryptionKey);
+      let decrypted = decryptNodeResponseWithPublicKey(nodePublicKey, result, encryptionKey);
       return format({ format: "bytes" }, decrypted as Bytes, returnFormat);
     } else {
       return vanillaCall(this, transaction, blockNumber, returnFormat);
@@ -89,7 +84,8 @@ export class SwisstronikPlugin extends Web3EthPluginBase {
     returnFormat: ReturnFormat = DEFAULT_RETURN_FORMAT as ReturnFormat
   ) {
     if (transaction.data && transaction.to) {
-      let [encryptedData] = await this.encryptDataField(transaction.data);
+      let nodePublicKey = await this.getNodePublicKey();
+      let [encryptedData] = encryptDataFieldWithPublicKey(nodePublicKey, transaction.data);
       transaction.data = encryptedData;
     }
     return vanillaEstimateGas(this, transaction, blockNumber, returnFormat);
@@ -102,52 +98,6 @@ export class SwisstronikPlugin extends Web3EthPluginBase {
       params: [blockNum]
     });
   }
-
-  async encryptDataField(data: string | Uint8Array, userEncryptionKey?: Uint8Array): Promise<[string, Uint8Array]> {
-    let nodePublicKey = await this.getNodePublicKey();
-    // Generate random user encryption key if is not provided
-    userEncryptionKey = userEncryptionKey ?? randomBytes(32);
-
-    // Create encryption key using KDF
-    const encryptionPrivateKey = deriveEncryptionKey(
-      userEncryptionKey,
-      stringToU8a(USER_KEY_PREFIX)
-    );
-    let dataEncoded = typeof data === "string" ? hexToU8a(data) : data;
-    // Encrypt data
-    const encryptionResult = encryptECDH(
-      encryptionPrivateKey,
-      hexToU8a(nodePublicKey),
-      dataEncoded
-    );
-    if (!encryptionResult.result) {
-      throw new Error(`Encryption error. Reason: ${encryptionResult.error}`);
-    }
-    return [u8aToHex(encryptionResult.result), userEncryptionKey];
-  }
-
-  async decryptNodeResponse(encryptedResponse: string | Uint8Array, encryptionKey: Uint8Array): Promise<Uint8Array> {
-    let nodePublicKey = await this.getNodePublicKey();
-    // Create encryption key using KDF
-    const encryptionPrivateKey = deriveEncryptionKey(
-      encryptionKey,
-      stringToU8a(USER_KEY_PREFIX)
-    );
-
-
-    let responseEncoded = typeof encryptedResponse === "string" ? hexToU8a(encryptedResponse) : encryptedResponse;
-    const decryptionResult = decryptECDH(
-      encryptionPrivateKey,
-      hexToU8a(nodePublicKey),
-      responseEncoded
-    );
-    if (!decryptionResult.result) {
-      throw new Error(`Decryption error. Reason: ${decryptionResult.error}`);
-    }
-
-    return decryptionResult.result;
-  }
-
 
 }
 

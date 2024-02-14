@@ -1083,10 +1083,10 @@
   dependencies:
     "@sinonjs/commons" "^3.0.0"
 
-"@swisstronik/utils@^1.1.1":
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/@swisstronik/utils/-/utils-1.1.1.tgz#c346e8deec688dc5424b186643bee0c1e33574f5"
-  integrity sha512-uhFjEd4+lXw9WIWppoFwfRDXupE4lmRqs5Jei/Nj3l0bqq7fDcoHMwBc5F02aquGVqslVZAUsLTkBaiI+JVHYw==
+"@swisstronik/utils@^1.2.0":
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/@swisstronik/utils/-/utils-1.2.0.tgz#c422a0d662062eba50f7f95915675e0fa2074390"
+  integrity sha512-B7LbBrJNhxOTMCW8Tr4TWTmWvWpvDO9V2CoLUUYXZCJWxcXamsJZ3hZh0FEiJ4+DnuBEhoqNRccZNQDTPbLR9Q==
   dependencies:
     "@noble/hashes" "^1.3.0"
     "@oasisprotocol/deoxysii" "0.0.5"
