@@ -36,6 +36,32 @@ web3.swisstronik.getNodePublicKey().then((resp) => {
 });
 ```
 
+### Sending transactions & performing calls
+
+```js
+import { Web3 } from "web3";
+import { SwisstronikPlugin } from "web3-plugin-swisstronik";
+
+const web3 = new Web3("https://json-rpc.testnet.swisstronik.com/"); // Any RPC node you wanted to connect with
+web3.registerPlugin(new SwisstronikPlugin());
+let wallet = web3.eth.accounts.wallet.add("0x..."); // Private Key
+// Get node public key
+let tx = {
+  to: '0xF8bEB8c8Be514772097103e39C2ccE057117CC92',
+  from: wallet[0].address,
+  data: '0x61bc221a'
+}
+let callResult = await web3.swisstronik.call(tx);
+console.log(callResult);
+
+let estimateGasResult = await web3.swisstronik.estimateGas(tx);
+console.log(estimateGasResult);
+
+let sentTxReceipt = await web3.swisstronik.sendTransaction(tx);
+console.log(sentTxReceipt);
+
+```
+
 ### Connecting Accounts to Web3
 
 ```js
