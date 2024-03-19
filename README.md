@@ -16,7 +16,7 @@ Swisstronik Web3.js Plugin allows the users to use Web3.js library with [Swisstr
 > Note: Make sure you are using `web3` version 4.0.3 or higher in your project.
 
 ```bash
-npm install web3-plugin-swisstronik web3@latest --save
+npm install @swisstronik/web3-plugin-swisstronik web3@latest --save
 ```
 
 ## Usage
@@ -25,7 +25,7 @@ npm install web3-plugin-swisstronik web3@latest --save
 
 ```js
 import { Web3 } from "web3";
-import { SwisstronikPlugin } from "web3-plugin-swisstronik";
+import { SwisstronikPlugin } from "@swisstronik/web3-plugin-swisstronik";
 
 const web3 = new Web3("https://json-rpc.testnet.swisstronik.com/"); // Any RPC node you wanted to connect with
 web3.registerPlugin(new SwisstronikPlugin());
@@ -66,7 +66,7 @@ console.log(sentTxReceipt);
 
 ```js
 import { Web3 } from "web3";
-import { SwisstronikPlugin } from "web3-plugin-swisstronik";
+import { SwisstronikPlugin } from "@swisstronik/web3-plugin-swisstronik";
 
 // With any RPC node and private key
 const web3 = new Web3("https://json-rpc.testnet.swisstronik.com/");
