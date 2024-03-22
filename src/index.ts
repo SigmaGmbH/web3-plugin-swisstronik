@@ -1,4 +1,4 @@
-import { ETH_DATA_FORMAT, Web3, Web3EthPluginBase } from "web3";
+import { ETH_DATA_FORMAT, Web3, Web3Context, Web3EthPluginBase } from "web3";
 import { decryptNodeResponseWithPublicKey, encryptDataFieldWithPublicKey } from "@swisstronik/utils";
 import {
   Address,
@@ -20,20 +20,11 @@ import {
 } from "web3-eth";
 import { format } from "web3-utils";
 import { SendTransactionOptions } from "web3-eth/src/types";
+import { SwissTronikContract } from "./SwissTronikContract";
 
 export class SwisstronikPlugin extends Web3EthPluginBase {
   public pluginNamespace = "swisstronik";
-  public defaultNodeUrl = "https://json-rpc.testnet.swisstronik.com/";
-
-  web3;
-
-  constructor(nodeUrl: string = "") {
-    super();
-    if (!nodeUrl || nodeUrl === "") {
-      nodeUrl = this.defaultNodeUrl;
-    }
-    this.web3 = new Web3(nodeUrl);
-  }
+  static web3: Web3;
 
   public async getStorageAt<ReturnFormat extends DataFormat = typeof DEFAULT_RETURN_FORMAT>(
     address: Address,
@@ -91,14 +82,20 @@ export class SwisstronikPlugin extends Web3EthPluginBase {
     return vanillaEstimateGas(this, transaction, blockNumber, returnFormat);
   }
 
+  public link(parentContext: Web3Context) {
+    super.link(parentContext);
+    SwisstronikPlugin.web3 = new Web3(parentContext.provider);
+  }
+
   public async getNodePublicKey(): Promise<string> {
-    let blockNum = await this.web3.eth.getBlockNumber(ETH_DATA_FORMAT);
+    let blockNum = await SwisstronikPlugin.web3.eth.getBlockNumber(ETH_DATA_FORMAT);
     return await this.requestManager.send({
       method: "eth_getNodePublicKey",
       params: [blockNum]
     });
   }
 
+  Contract = SwissTronikContract;
 }
 
 // Module Augmentation
