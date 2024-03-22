@@ -7,8 +7,6 @@ import {
   PayableCallOptions,
 } from "web3";
 
-import { ContractMethodsInterface } from "web3-eth-contract";
-
 export class SwissTronikContract extends Contract<any> {
   private readonly contractInstance;
   private readonly address;
