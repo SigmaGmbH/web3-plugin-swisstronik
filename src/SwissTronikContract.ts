@@ -23,48 +23,48 @@ export class SwissTronikContract extends Contract<any> {
     this.contractInstance = new Contract(jsonInterface, address);
   }
 
-  public get methods(): any {
-    return new Proxy(
-      {},
-      {
-        get: (_, methodName: string) => {
-          return (...args: any[]) => {
-            const data = this.contractInstance.methods[methodName](
-              ...args
-            ).encodeABI();
+  // public get methods(): any {
+  //   return new Proxy(
+  //     {},
+  //     {
+  //       get: (_, methodName: string) => {
+  //         return (...args: any[]) => {
+  //           const data = this.contractInstance.methods[methodName](
+  //             ...args
+  //           ).encodeABI();
 
-            return {
-              call: async (
-                tx?: PayableCallOptions,
-                block?: BlockNumberOrTag
-              ) => {
-                const responseMessage = await this.plugin.call(
-                  {
-                    to: this.address,
-                    data,
-                    ...tx,
-                  },
-                  block
-                );
+  //           return {
+  //             call: async (
+  //               tx?: PayableCallOptions,
+  //               block?: BlockNumberOrTag
+  //             ) => {
+  //               const responseMessage = await this.plugin.call(
+  //                 {
+  //                   to: this.address,
+  //                   data,
+  //                   ...tx,
+  //                 },
+  //                 block
+  //               );
 
-                const input = (
-                  this.jsonInterface.find(
-                    (x: any) => x.name === methodName
-                  ) as any
-                )?.outputs as AbiInput[];
+  //               const input = (
+  //                 this.jsonInterface.find(
+  //                   (x: any) => x.name === methodName
+  //                 ) as any
+  //               )?.outputs as AbiInput[];
 
-                const decodedCall =
-                  SwisstronikPlugin.web3.eth.abi.decodeParameters(
-                    input,
-                    responseMessage
-                  );
+  //               const decodedCall =
+  //                 SwisstronikPlugin.web3.eth.abi.decodeParameters(
+  //                   input,
+  //                   responseMessage
+  //                 );
 
-                return decodedCall[0] as any;
-              },
-            };
-          };
-        },
-      }
-    );
-  }
+  //               return decodedCall[0] as any;
+  //             },
+  //           };
+  //         };
+  //       },
+  //     }
+  //   );
+  // }
 }

@@ -1,41 +1,135 @@
-import { ETH_DATA_FORMAT, Web3, Web3Context, Web3EthPluginBase } from "web3";
-import { decryptNodeResponseWithPublicKey, encryptDataFieldWithPublicKey } from "@swisstronik/utils";
+import { ETH_DATA_FORMAT, Web3, Web3Context, Web3PluginBase } from "web3";
 import {
-  Address,
-  BlockNumberOrTag,
+  decryptNodeResponseWithPublicKey,
+  encryptDataFieldWithPublicKey,
+} from "@swisstronik/utils";
+import {
   Bytes,
   DataFormat,
   DEFAULT_RETURN_FORMAT,
-  Numbers,
   Transaction,
-  TransactionCall,
   TransactionWithFromAndToLocalWalletIndex,
   TransactionWithFromLocalWalletIndex,
-  TransactionWithToLocalWalletIndex
+  TransactionWithToLocalWalletIndex,
+  Web3APIMethod,
+  Web3APIRequest,
+  JsonRpcResponse,
+  Web3APIReturnType,
 } from "web3-types";
-import {
-  call as vanillaCall,
-  estimateGas as vanillaEstimateGas,
-  sendTransaction as vanillaSendTransaction
-} from "web3-eth";
+import { sendTransaction as vanillaSendTransaction } from "web3-eth";
 import { format } from "web3-utils";
 import { SendTransactionOptions } from "web3-eth/src/types";
-import { SwissTronikContract } from "./SwissTronikContract";
+import { RequestManagerMiddleware } from "web3-core";
+import { jsonRpc } from "web3-utils";
 
-export class SwisstronikPlugin extends Web3EthPluginBase {
-  public pluginNamespace = "swisstronik";
-  static web3: Web3;
+class Web3Middleware<API> implements RequestManagerMiddleware<API> {
+  private nodePublicKey!: string;
+  private method!: string;
+  private encryptionKey!: Uint8Array;
+  web3!: Web3;
 
-  public async getStorageAt<ReturnFormat extends DataFormat = typeof DEFAULT_RETURN_FORMAT>(
-    address: Address,
-    storageSlot: Numbers,
-    blockNumber: BlockNumberOrTag = this.defaultBlock,
-    returnFormat: ReturnFormat = DEFAULT_RETURN_FORMAT as ReturnFormat
-  ) {
-    throw new Error("getStorageAt is not available in Swisstronik due to all data in the EVM being encrypted");
+  constructor(private getNodePublicKey: () => Promise<string>) {
+    getNodePublicKey;
+  }
+  // eslint-disable-next-line class-methods-use-this
+  public async processRequest<Method extends Web3APIMethod<API>>(
+    request: Web3APIRequest<API, Method>
+  ): Promise<Web3APIRequest<API, Method>> {
+    console.log("--------------------");
+    console.log("Request", request);
+
+    this.method = request.method;
+
+    if (
+      ["eth_estimateGas", "eth_call", "eth_sendTransaction"].includes(
+        request.method
+      ) &&
+      Array.isArray(request.params)
+    ) {
+      const param = request.params[0];
+
+      if (param.data && param.to) {
+        this.nodePublicKey = await this.getNodePublicKey();
+
+        let [encryptedData, encryptionKey] = encryptDataFieldWithPublicKey(
+          this.nodePublicKey,
+          param.data
+        );
+        this.encryptionKey = encryptionKey;
+
+        console.log("before encryption", request.params[0]);
+        param.data = encryptedData;
+        console.log("encrypted", request.params[0]);
+      }
+    }
+    console.log("--------------------");
+
+    return Promise.resolve(request);
   }
 
-  public async sendTransaction<ReturnFormat extends DataFormat = typeof DEFAULT_RETURN_FORMAT>(
+  // eslint-disable-next-line class-methods-use-this
+  public async processResponse<
+    Method extends Web3APIMethod<API>,
+    ResponseType = Web3APIReturnType<API, Method>,
+  >(
+    response: JsonRpcResponse<ResponseType>
+  ): Promise<JsonRpcResponse<ResponseType>> {
+    let responseObj = { ...response };
+    console.log("--------------------");
+    console.log("Response");
+    console.log("this.method", this.method);
+    console.log("this.nodePublicKey", this.nodePublicKey);
+    console.log("responseObj", responseObj);
+
+    const { result } = responseObj as any;
+
+    if (
+      !jsonRpc.isBatchResponse(responseObj) &&
+      this.method === "eth_call" &&
+      result &&
+      this.nodePublicKey &&
+      this.encryptionKey
+    ) {
+      const decrypted = decryptNodeResponseWithPublicKey(
+        this.nodePublicKey,
+        result,
+        this.encryptionKey
+      );
+      console.log("decrypted!");
+
+      responseObj = {
+        ...responseObj,
+        result: format({ format: "bytes" }, decrypted as Bytes) as any,
+      };
+    }
+    console.log("--------------------");
+
+    return Promise.resolve(responseObj);
+  }
+}
+
+export class SwisstronikPlugin extends Web3PluginBase {
+  public pluginNamespace = "swisstronik";
+  public web3Middleware: Web3Middleware<any>;
+  static web3: Web3;
+
+  constructor() {
+    super();
+    this.web3Middleware = new Web3Middleware<any>(this.getNodePublicKey);
+  }
+
+  public link(parentContext: Web3Context): void {
+    parentContext.requestManager.setMiddleware(this.web3Middleware);
+
+    super.link(parentContext);
+
+    SwisstronikPlugin.web3 = new Web3(parentContext.provider);
+    this.web3Middleware.web3 = SwisstronikPlugin.web3;
+  }
+
+  public async sendTransaction<
+    ReturnFormat extends DataFormat = typeof DEFAULT_RETURN_FORMAT,
+  >(
     transaction:
       | Transaction
       | TransactionWithFromLocalWalletIndex
@@ -46,56 +140,23 @@ export class SwisstronikPlugin extends Web3EthPluginBase {
   ) {
     if (transaction.data && transaction.to) {
       let nodePublicKey = await this.getNodePublicKey();
-      let [encryptedData] = encryptDataFieldWithPublicKey(nodePublicKey, transaction.data);
+      let [encryptedData] = encryptDataFieldWithPublicKey(
+        nodePublicKey,
+        transaction.data
+      );
       transaction.data = encryptedData;
     }
     return vanillaSendTransaction(this, transaction, returnFormat, options);
   }
 
-  public async call<ReturnFormat extends DataFormat = typeof DEFAULT_RETURN_FORMAT>(
-    transaction: TransactionCall,
-    blockNumber: BlockNumberOrTag = this.defaultBlock,
-    returnFormat: ReturnFormat = DEFAULT_RETURN_FORMAT as ReturnFormat
-  ) {
-    if (transaction.data && transaction.to) {
-      let nodePublicKey = await this.getNodePublicKey();
-      let [encryptedData, encryptionKey] = encryptDataFieldWithPublicKey(nodePublicKey, transaction.data);
-      transaction.data = encryptedData;
-      let result = await vanillaCall(this, transaction, blockNumber, returnFormat);
-      let decrypted = decryptNodeResponseWithPublicKey(nodePublicKey, result, encryptionKey);
-      return format({ format: "bytes" }, decrypted as Bytes, returnFormat);
-    } else {
-      return vanillaCall(this, transaction, blockNumber, returnFormat);
-    }
-  }
-
-  public async estimateGas<ReturnFormat extends DataFormat = typeof DEFAULT_RETURN_FORMAT>(
-    transaction: Transaction,
-    blockNumber: BlockNumberOrTag = this.defaultBlock,
-    returnFormat: ReturnFormat = DEFAULT_RETURN_FORMAT as ReturnFormat
-  ) {
-    if (transaction.data && transaction.to) {
-      let nodePublicKey = await this.getNodePublicKey();
-      let [encryptedData] = encryptDataFieldWithPublicKey(nodePublicKey, transaction.data);
-      transaction.data = encryptedData;
-    }
-    return vanillaEstimateGas(this, transaction, blockNumber, returnFormat);
-  }
-
-  public link(parentContext: Web3Context) {
-    super.link(parentContext);
-    SwisstronikPlugin.web3 = new Web3(parentContext.provider);
-  }
-
   public async getNodePublicKey(): Promise<string> {
-    let blockNum = await SwisstronikPlugin.web3.eth.getBlockNumber(ETH_DATA_FORMAT);
-    return await this.requestManager.send({
+    let blockNum =
+      await SwisstronikPlugin.web3.eth.getBlockNumber(ETH_DATA_FORMAT);
+    return await SwisstronikPlugin.web3.requestManager.send({
       method: "eth_getNodePublicKey",
-      params: [blockNum]
+      params: [blockNum],
     });
   }
-
-  Contract = SwissTronikContract;
 }
 
 // Module Augmentation
