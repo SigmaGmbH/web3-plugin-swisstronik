@@ -1,39 +1,46 @@
-import { Web3, core, ETH_DATA_FORMAT, Web3BaseWallet } from "web3";
+import {
+  Web3,
+  core,
+  ETH_DATA_FORMAT,
+  Web3BaseWalletAccount,
+  DEFAULT_RETURN_FORMAT,
+} from "web3";
+import { Wallet } from "web3-eth-accounts";
 import { SwisstronikPlugin } from "../src";
+import { abi } from "./ERC20ABI";
 
 describe("SwisstronikPlugin Tests", () => {
-  it("should register TemplatePlugin plugin on Web3Context instance", () => {
-    const web3Context = new core.Web3Context(
-      "https://json-rpc.testnet.swisstronik.com/"
-    );
-    web3Context.registerPlugin(new SwisstronikPlugin());
-    expect(web3Context.swisstronik).toBeDefined();
+  let consoleSpy: jest.SpiedFunction<typeof global.console.log>;
+
+  let web3: Web3;
+  let wallet: Wallet<Web3BaseWalletAccount>;
+
+  const NODE_HTTP_URL = "https://json-rpc.testnet.swisstronik.com";
+
+  beforeAll(() => {
+    web3 = new Web3(NODE_HTTP_URL);
+    web3.registerPlugin(new SwisstronikPlugin());
+
+    consoleSpy = jest.spyOn(global.console, "log").mockImplementation();
+    wallet = web3.eth.accounts.wallet.add(
+      "0x9a3247611b86ed89cc6c1cde251fcc29fd5624e93087968eb6d7be36c420a70a"
+    ); //NEVER SHARE YOUR PRIVATE KEYS
   });
 
-  describe("SwisstronikPlugin method tests", () => {
-    let consoleSpy: jest.SpiedFunction<typeof global.console.log>;
+  afterAll(() => {
+    consoleSpy.mockRestore();
+  });
 
-    let web3: Web3;
-    let wallet: any;
+  it("should register Plugin on Web3Context instance", async () => {
+    expect(web3.swisstronik).toBeDefined();
+  });
 
-    beforeAll(() => {
-      web3 = new Web3("https://json-rpc.testnet.swisstronik.com/");
-      web3.registerPlugin(new SwisstronikPlugin());
-      consoleSpy = jest.spyOn(global.console, "log").mockImplementation();
-      wallet = web3.eth.accounts.wallet.add(
-        "0x9a3247611b86ed89cc6c1cde251fcc29fd5624e93087968eb6d7be36c420a70a"
-      ); //NEVER SHARE YOUR PRIVATE KEYS
-    });
+  it("should call SwisstronikPlugin to request node public key", async () => {
+    const resp = await web3.swisstronik.getNodePublicKey();
+    expect(resp).toBeDefined();
+  });
 
-    afterAll(() => {
-      consoleSpy.mockRestore();
-    });
-
-    it("should call SwisstronikPlugin request node public key", async () => {
-      let resp = await web3.swisstronik.getNodePublicKey();
-      expect(resp).toBeDefined();
-    });
-
+  describe("SwisstronikPlugin eth calls", () => {
     it("getStorageAt should error", async () => {
       await expect(async () => {
         await web3.eth.getStorageAt("0x0", 1);
@@ -69,8 +76,78 @@ describe("SwisstronikPlugin Tests", () => {
         data: "0x61bc221a",
       };
 
-      let res = await web3.swisstronik.sendTransaction(tx, ETH_DATA_FORMAT);
+      let res = await web3.eth.sendTransaction(tx, ETH_DATA_FORMAT);
       expect(res.status).toEqual("0x1");
     }, 20000);
+  });
+
+  describe("SwisstronikPlugin contract calls", () => {
+    const ERC20_CONTRACT_ADDRESS = "0x22B01aa7E98dF5dF7C034689A300c6E06cc89Cb3";
+
+    it("Should fetch ERC20 balanceOf", async () => {
+      const contract = new web3.eth.Contract(abi, ERC20_CONTRACT_ADDRESS);
+
+      const balanceOf = await contract.methods
+        .balanceOf(wallet[0].address)
+        .call();
+
+      expect(Number(balanceOf)).toBeGreaterThanOrEqual(0);
+    });
+
+    it("Should estimate gas for ERC20 transfer ", async () => {
+      const contract = new web3.eth.Contract(abi, ERC20_CONTRACT_ADDRESS);
+
+      const gas = await contract.methods
+        .transfer(wallet[0].address, 5n)
+        .estimateGas({ from: wallet[0].address });
+
+      expect(Number(gas)).toBeGreaterThanOrEqual(0);
+    });
+
+    it(
+      "Should mint ERC20",
+      async () => {
+        const contract = new web3.eth.Contract(abi, ERC20_CONTRACT_ADDRESS);
+
+        const tx = {
+          from: wallet[0].address,
+          to: ERC20_CONTRACT_ADDRESS,
+          data: contract.methods.mint100tokens().encodeABI(),
+        };
+
+        const res = await web3.eth.sendTransaction(tx, ETH_DATA_FORMAT, {
+          checkRevertBeforeSending: false,
+        });
+        expect(res.status).toEqual("0x1");
+
+        // const tx = await contract.methods
+        //   .mint100tokens()
+        //   .send({ from: wallet[0].address});
+      },
+      5 * 60 * 1000
+    );
+
+    it(
+      "Should transfer ERC20",
+      async () => {
+        const contract = new web3.eth.Contract(abi, ERC20_CONTRACT_ADDRESS);
+
+        const tx = {
+          from: wallet[0].address,
+          to: ERC20_CONTRACT_ADDRESS,
+          data: contract.methods.transfer(wallet[0].address, 5n).encodeABI(),
+        };
+
+        const res = await web3.eth.sendTransaction(tx, ETH_DATA_FORMAT, {
+          checkRevertBeforeSending: false,
+        });
+        expect(res.status).toEqual("0x1");
+
+        // const tx = await contract.methods
+        //   .transfer(wallet[0].address, 5n)
+        //   .send({ from: wallet[0].address });
+      },
+      5 * 60 * 1000
+    );
   });
 });
