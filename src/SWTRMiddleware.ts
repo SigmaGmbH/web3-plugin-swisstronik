@@ -16,7 +16,6 @@ import {
 } from "web3-eth/src/types";
 import { RequestManagerMiddleware } from "web3-core";
 
-
 export class SWTRMiddleware<API = any>
   implements RequestManagerMiddleware<API>, TransactionMiddleware
 {
