@@ -119,10 +119,6 @@ describe("SwisstronikPlugin Tests", () => {
           checkRevertBeforeSending: false,
         });
         expect(res.status).toEqual("0x1");
-
-        // const tx = await contract.methods
-        //   .mint100tokens()
-        //   .send({ from: wallet[0].address});
       },
       5 * 60 * 1000
     );
@@ -142,10 +138,6 @@ describe("SwisstronikPlugin Tests", () => {
           checkRevertBeforeSending: false,
         });
         expect(res.status).toEqual("0x1");
-
-        // const tx = await contract.methods
-        //   .transfer(wallet[0].address, 5n)
-        //   .send({ from: wallet[0].address });
       },
       5 * 60 * 1000
     );

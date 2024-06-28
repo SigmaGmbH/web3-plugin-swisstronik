@@ -51,14 +51,50 @@ let tx = {
   from: wallet[0].address,
   data: '0x61bc221a'
 }
-let callResult = await web3.swisstronik.call(tx);
+let callResult = await web3.eth.call(tx);
 console.log(callResult);
 
-let estimateGasResult = await web3.swisstronik.estimateGas(tx);
+let estimateGasResult = await web3.eth.estimateGas(tx);
 console.log(estimateGasResult);
 
-let sentTxReceipt = await web3.swisstronik.sendTransaction(tx);
+let sentTxReceipt = await web3.eth.sendTransaction(tx);
 console.log(sentTxReceipt);
+
+```
+
+### Interacting with a Smart Contrat
+
+```js
+import { Web3 } from "web3";
+import { SwisstronikPlugin } from "web3-plugin-swisstronik";
+
+const web3 = new Web3("https://json-rpc.testnet.swisstronik.com/"); // Any RPC node you wanted to connect with
+web3.registerPlugin(new SwisstronikPlugin());
+let wallet = web3.eth.accounts.wallet.add("0x..."); // Private Key
+
+const contract = new web3.eth.Contract(abi, ERC20_CONTRACT_ADDRESS);
+
+const balanceOf = await contract.methods
+  .balanceOf(wallet[0].address)
+  .call();
+console.log(balanceOf);
+
+const gas = await contract.methods
+  .transfer(wallet[0].address, 5n)
+  .estimateGas({ from: wallet[0].address });
+console.log(gas);
+
+const tx = {
+  from: wallet[0].address,
+  to: ERC20_CONTRACT_ADDRESS,
+  data: contract.methods.transfer(wallet[0].address, 5n).encodeABI(),
+};
+
+const sentTxReceipt = await web3.eth.sendTransaction(tx, ETH_DATA_FORMAT, {
+  checkRevertBeforeSending: false,
+});
+console.log(sentTxReceipt);
+
 
 ```
 
