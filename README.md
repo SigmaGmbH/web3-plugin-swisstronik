@@ -13,7 +13,7 @@ Swisstronik Web3.js Plugin allows the users to use Web3.js library with [Swisstr
 
 ## Installation
 
-> Note: Make sure you are using `web3` version 4.0.3 or higher in your project.
+> Note: Make sure you are using `web3` version 4.10.0 or higher in your project.
 
 ```bash
 npm install @swisstronik/web3-plugin-swisstronik web3@latest --save
