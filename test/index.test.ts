@@ -19,7 +19,7 @@ describe("SwisstronikPlugin Tests", () => {
 
   beforeAll(() => {
     web3 = new Web3(NODE_HTTP_URL);
-    web3.registerPlugin(new SwisstronikPlugin());
+    web3.registerPlugin(new SwisstronikPlugin(NODE_HTTP_URL));
 
     consoleSpy = jest.spyOn(global.console, "log").mockImplementation();
     wallet = web3.eth.accounts.wallet.add(

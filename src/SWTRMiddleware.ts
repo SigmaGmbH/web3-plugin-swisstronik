@@ -31,16 +31,16 @@ export class SWTRMiddleware<API = any>
 
   private isDataEncrypted: { [data: string]: boolean } = {};
 
-  constructor(private getNodePublicKey: () => Promise<string>) {
-    getNodePublicKey;
-  }
+  constructor(
+    private getNodePublicKey: (rpcEndpoint: string) => Promise<string>,
+    private rpcEndpoint: string
+  ) {}
 
   public async processTransaction(
     transaction: TransactionMiddlewareData,
-    options?: { [key: string]: unknown } | undefined
   ): Promise<TransactionMiddlewareData> {
     if (transaction.data && transaction.to) {
-      let nodePublicKey = await this.getNodePublicKey();
+      let nodePublicKey = await this.getNodePublicKey(this.rpcEndpoint);
       let [encryptedData] = encryptDataFieldWithPublicKey(
         nodePublicKey,
         transaction.data
@@ -54,7 +54,6 @@ export class SWTRMiddleware<API = any>
 
   public async processRequest(
     request: JsonRpcRequest<any>,
-    options?: { [key: string]: unknown }
   ) {
     if (
       ["eth_estimateGas", "eth_call"].includes(request.method) &&
@@ -63,7 +62,7 @@ export class SWTRMiddleware<API = any>
       const param = request.params[0];
 
       if (param.data && param.to && !this.isDataEncrypted[param.data]) {
-        const nodePublicKey = await this.getNodePublicKey();
+        const nodePublicKey = await this.getNodePublicKey(this.rpcEndpoint);
 
         const [encryptedData, encryptionKey] = encryptDataFieldWithPublicKey(
           nodePublicKey,

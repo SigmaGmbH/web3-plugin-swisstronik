@@ -1,20 +1,22 @@
 import { Web3, Web3Context, Web3PluginBase } from "web3";
 import { SWTRMiddleware } from "./SWTRMiddleware";
+import { getNodePublicKey } from "@swisstronik/utils";
 
 export class SwisstronikPlugin extends Web3PluginBase {
   public pluginNamespace = "swisstronik";
   public middleware: SWTRMiddleware;
   static web3: Web3;
 
-  constructor() {
+  constructor(private rpcEndpoint: string) {
     super();
-    this.middleware = new SWTRMiddleware(this.getNodePublicKey);
+    this.middleware = new SWTRMiddleware(this.getNodePublicKey, rpcEndpoint);
   }
 
   public link(parentContext: Web3Context): void {
     parentContext.requestManager.setMiddleware(this.middleware);
-    (parentContext as any).Web3Eth.setTransactionMiddleware(this.middleware);
+    (parentContext as any).Web3Eth?.setTransactionMiddleware(this.middleware);
 
+    console.log((parentContext.provider as any))
     super.link(parentContext);
 
     SwisstronikPlugin.web3 = new Web3(parentContext.provider);
@@ -22,10 +24,8 @@ export class SwisstronikPlugin extends Web3PluginBase {
   }
 
   public async getNodePublicKey(): Promise<string> {
-    return await SwisstronikPlugin.web3.requestManager.send({
-      method: "eth_getNodePublicKey",
-      params: ["latest"],
-    });
+    let {publicKey} = await getNodePublicKey(this.rpcEndpoint);
+    return publicKey!;
   }
 }
 
