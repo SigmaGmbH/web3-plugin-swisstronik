@@ -115,7 +115,7 @@ const [account] = await window.ethereum.request({
   method: "eth_requestAccounts"
 });
 
-web3.registerPlugin(new SwisstronikPlugin());
+web3.registerPlugin(new SwisstronikPlugin("https://json-rpc.testnet.swisstronik.com/"));
 ```
 
 Refer to [Swisstronik Developer Docs](https://swisstronik.gitbook.io/swisstronik-docs/) for more information & usage scenarios.
@@ -125,9 +125,9 @@ Refer to [Swisstronik Developer Docs](https://swisstronik.gitbook.io/swisstronik
 To publish a new version of the package to npm, run the following command:
 
 ```bash
-yarn run build
+npm run build
 
-yarn publish
+npm publish
 ```
 
 ## Resources

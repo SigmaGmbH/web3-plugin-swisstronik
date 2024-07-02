@@ -6,17 +6,28 @@ export class SwisstronikPlugin extends Web3PluginBase {
   public pluginNamespace = "swisstronik";
   public middleware: SWTRMiddleware;
   static web3: Web3;
+  static rpcEndpoint?: string;
 
-  constructor(private rpcEndpoint: string) {
+  constructor(rpcEndpoint?: string) {
     super();
-    this.middleware = new SWTRMiddleware(this.getNodePublicKey, rpcEndpoint);
+    if (rpcEndpoint) SwisstronikPlugin.rpcEndpoint = rpcEndpoint;
+
+    this.middleware = new SWTRMiddleware(this.getNodePublicKey);
   }
 
   public link(parentContext: Web3Context): void {
     parentContext.requestManager.setMiddleware(this.middleware);
     (parentContext as any).Web3Eth?.setTransactionMiddleware(this.middleware);
 
-    console.log((parentContext.provider as any))
+    const clientUrl = (parentContext?.currentProvider as any)?.clientUrl;
+    if (
+      !SwisstronikPlugin.rpcEndpoint &&
+      clientUrl &&
+      typeof clientUrl === "string"
+    ) {
+      SwisstronikPlugin.rpcEndpoint = clientUrl;
+    }
+
     super.link(parentContext);
 
     SwisstronikPlugin.web3 = new Web3(parentContext.provider);
@@ -24,7 +35,10 @@ export class SwisstronikPlugin extends Web3PluginBase {
   }
 
   public async getNodePublicKey(): Promise<string> {
-    let {publicKey} = await getNodePublicKey(this.rpcEndpoint);
+    if (!SwisstronikPlugin.rpcEndpoint)
+      throw new Error("RPC endpoint is not set");
+
+    let { publicKey } = await getNodePublicKey(SwisstronikPlugin.rpcEndpoint);
     return publicKey!;
   }
 }
