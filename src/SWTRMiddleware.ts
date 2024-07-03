@@ -31,13 +31,10 @@ export class SWTRMiddleware<API = any>
 
   private isDataEncrypted: { [data: string]: boolean } = {};
 
-  constructor(private getNodePublicKey: () => Promise<string>) {
-    getNodePublicKey;
-  }
+  constructor(private getNodePublicKey: () => Promise<string>) {}
 
   public async processTransaction(
-    transaction: TransactionMiddlewareData,
-    options?: { [key: string]: unknown } | undefined
+    transaction: TransactionMiddlewareData
   ): Promise<TransactionMiddlewareData> {
     if (transaction.data && transaction.to) {
       let nodePublicKey = await this.getNodePublicKey();
@@ -52,10 +49,7 @@ export class SWTRMiddleware<API = any>
     return transaction;
   }
 
-  public async processRequest(
-    request: JsonRpcRequest<any>,
-    options?: { [key: string]: unknown }
-  ) {
+  public async processRequest(request: JsonRpcRequest<any>) {
     if (
       ["eth_estimateGas", "eth_call"].includes(request.method) &&
       Array.isArray(request.params)
