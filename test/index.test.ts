@@ -1,7 +1,5 @@
 import {
   Web3,
-  core,
-  ETH_DATA_FORMAT,
   Web3BaseWalletAccount,
   DEFAULT_RETURN_FORMAT,
 } from "web3";
@@ -53,7 +51,7 @@ describe("SwisstronikPlugin Tests", () => {
         from: wallet[0].address,
         data: "0x61bc221a",
       };
-      let res = await web3.eth.call(tx, "latest", ETH_DATA_FORMAT);
+      let res = await web3.eth.call(tx, "latest");
       expect(res).toEqual(
         "0x000000000000000000000000000000000000000000000000000000000000050b"
       );
@@ -65,8 +63,8 @@ describe("SwisstronikPlugin Tests", () => {
         from: wallet[0].address,
         data: "0x61bc221a",
       };
-      let res = await web3.eth.estimateGas(tx, "latest", ETH_DATA_FORMAT);
-      expect(res).toEqual("0x5b1d");
+      let res = await web3.eth.estimateGas(tx, "latest");
+      expect(res).toEqual(23325n);
     });
 
     it("Send transaction on testnet with encrypted data", async () => {
@@ -76,8 +74,8 @@ describe("SwisstronikPlugin Tests", () => {
         data: "0x61bc221a",
       };
 
-      let res = await web3.eth.sendTransaction(tx, ETH_DATA_FORMAT);
-      expect(res.status).toEqual("0x1");
+      let res = await web3.eth.sendTransaction(tx);
+      expect(res.status).toEqual(1n);
     }, 20000);
   });
 
@@ -115,10 +113,10 @@ describe("SwisstronikPlugin Tests", () => {
           data: contract.methods.mint100tokens().encodeABI(),
         };
 
-        const res = await web3.eth.sendTransaction(tx, ETH_DATA_FORMAT, {
+        const res = await web3.eth.sendTransaction(tx, DEFAULT_RETURN_FORMAT, {
           checkRevertBeforeSending: false,
         });
-        expect(res.status).toEqual("0x1");
+        expect(res.status).toEqual(1n);
       },
       5 * 60 * 1000
     );
@@ -134,10 +132,10 @@ describe("SwisstronikPlugin Tests", () => {
           data: contract.methods.transfer(wallet[0].address, 5n).encodeABI(),
         };
 
-        const res = await web3.eth.sendTransaction(tx, ETH_DATA_FORMAT, {
+        const res = await web3.eth.sendTransaction(tx, DEFAULT_RETURN_FORMAT, {
           checkRevertBeforeSending: false,
         });
-        expect(res.status).toEqual("0x1");
+        expect(res.status).toEqual(1n);
       },
       5 * 60 * 1000
     );
