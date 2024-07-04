@@ -62,10 +62,10 @@ console.log(sentTxReceipt);
 
 ```
 
-### Interacting with a Smart Contrat
+### Interacting with a Smart Contract
 
 ```js
-import { Web3 } from "web3";
+import { Web3, DEFAULT_RETURN_FORMAT } from "web3";
 import { SwisstronikPlugin } from "web3-plugin-swisstronik";
 
 const web3 = new Web3("https://json-rpc.testnet.swisstronik.com/"); // Any RPC node you wanted to connect with
@@ -90,7 +90,7 @@ const tx = {
   data: contract.methods.transfer(wallet[0].address, 5n).encodeABI(),
 };
 
-const sentTxReceipt = await web3.eth.sendTransaction(tx, ETH_DATA_FORMAT, {
+const sentTxReceipt = await web3.eth.sendTransaction(tx, DEFAULT_RETURN_FORMAT, {
   checkRevertBeforeSending: false,
 });
 console.log(sentTxReceipt);

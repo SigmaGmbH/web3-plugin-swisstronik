@@ -17,8 +17,8 @@ export class SwisstronikPlugin extends Web3PluginBase {
 
   public link(parentContext: Web3Context): void {
     parentContext.requestManager.setMiddleware(this.middleware);
-    (parentContext as any).Web3Eth?.setTransactionMiddleware(this.middleware);
-
+    (parentContext as any).eth.setTransactionMiddleware(this.middleware);
+    
     const clientUrl = (parentContext?.currentProvider as any)?.clientUrl;
     if (
       !SwisstronikPlugin.rpcEndpoint &&
@@ -28,10 +28,10 @@ export class SwisstronikPlugin extends Web3PluginBase {
       SwisstronikPlugin.rpcEndpoint = clientUrl;
     }
 
-    super.link(parentContext);
-
     SwisstronikPlugin.web3 = new Web3(parentContext.provider);
     this.middleware.web3 = SwisstronikPlugin.web3;
+
+    super.link(parentContext);
   }
 
   public async getNodePublicKey(): Promise<string> {
