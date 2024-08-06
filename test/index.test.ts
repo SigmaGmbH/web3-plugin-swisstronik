@@ -106,16 +106,8 @@ describe("SwisstronikPlugin Tests", () => {
       "Should mint ERC20",
       async () => {
         const contract = new web3.eth.Contract(abi, ERC20_CONTRACT_ADDRESS);
+        const res = await contract.methods.mint100tokens().send({from: wallet[0].address});
 
-        const tx = {
-          from: wallet[0].address,
-          to: ERC20_CONTRACT_ADDRESS,
-          data: contract.methods.mint100tokens().encodeABI(),
-        };
-
-        const res = await web3.eth.sendTransaction(tx, DEFAULT_RETURN_FORMAT, {
-          checkRevertBeforeSending: false,
-        });
         expect(res.status).toEqual(1n);
       },
       5 * 60 * 1000
@@ -125,16 +117,8 @@ describe("SwisstronikPlugin Tests", () => {
       "Should transfer ERC20",
       async () => {
         const contract = new web3.eth.Contract(abi, ERC20_CONTRACT_ADDRESS);
+        const res = await contract.methods.transfer(wallet[0].address, 5n).send({from: wallet[0].address});
 
-        const tx = {
-          from: wallet[0].address,
-          to: ERC20_CONTRACT_ADDRESS,
-          data: contract.methods.transfer(wallet[0].address, 5n).encodeABI(),
-        };
-
-        const res = await web3.eth.sendTransaction(tx, DEFAULT_RETURN_FORMAT, {
-          checkRevertBeforeSending: false,
-        });
         expect(res.status).toEqual(1n);
       },
       5 * 60 * 1000

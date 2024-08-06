@@ -84,15 +84,7 @@ const gas = await contract.methods
   .estimateGas({ from: wallet[0].address });
 console.log(gas);
 
-const tx = {
-  from: wallet[0].address,
-  to: ERC20_CONTRACT_ADDRESS,
-  data: contract.methods.transfer(wallet[0].address, 5n).encodeABI(),
-};
-
-const sentTxReceipt = await web3.eth.sendTransaction(tx, DEFAULT_RETURN_FORMAT, {
-  checkRevertBeforeSending: false,
-});
+const sentTxReceipt = await contract.methods.transfer(wallet[0].address, 5n).send({from: wallet[0].address});
 console.log(sentTxReceipt);
 
 
