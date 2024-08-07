@@ -10,6 +10,7 @@
 .prettierignore
 *.log
 
+
 coverage/
 benchmark/
 .coverage/
@@ -19,3 +20,4 @@ tmp/
 logs/
 test/
 scripts/
+.idea/
