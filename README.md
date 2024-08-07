@@ -1,6 +1,6 @@
 # Swisstronik Web3 Plugin
 
-[![npm version](https://img.shields.io/badge/npm-0.2.7-brightgreen)](https://www.npmjs.com/package/web3-plugin-swisstronik)
+[![npm version](https://img.shields.io/badge/npm-1.5.0-brightgreen)](https://www.npmjs.com/package/@swisstronik/web3-plugin-swisstronik)
 
 Swisstronik Web3.js Plugin allows the users to use Web3.js library with [Swisstronik](https://swisstronik.com)
 
@@ -13,7 +13,7 @@ Swisstronik Web3.js Plugin allows the users to use Web3.js library with [Swisstr
 
 ## Installation
 
-> Note: Make sure you are using `web3` version 4.10.0 or higher in your project.
+> Note: Make sure you are using `web3` version 4.11.1 or higher in your project.
 
 ```bash
 npm install @swisstronik/web3-plugin-swisstronik web3@latest --save
