@@ -1,6 +1,6 @@
 # Swisstronik Web3 Plugin
 
-[![npm version](https://img.shields.io/badge/npm-0.2.7-brightgreen)](https://www.npmjs.com/package/web3-plugin-swisstronik)
+[![npm version](https://img.shields.io/badge/npm-1.5.0-brightgreen)](https://www.npmjs.com/package/@swisstronik/web3-plugin-swisstronik)
 
 Swisstronik Web3.js Plugin allows the users to use Web3.js library with [Swisstronik](https://swisstronik.com)
 
