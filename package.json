@@ -1,6 +1,6 @@
 {
   "name": "@swisstronik/web3-plugin-swisstronik",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Web3.js plugin for Swisstronik network",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -38,6 +38,6 @@
     "typescript": "^5.1.3"
   },
   "peerDependencies": {
-    "web3": "^4.10.0"
+    "web3": "^4.11.1"
   }
 }
