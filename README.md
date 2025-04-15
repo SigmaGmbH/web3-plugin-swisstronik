@@ -27,7 +27,7 @@ npm install @swisstronik/web3-plugin-swisstronik web3@latest --save
 import { Web3 } from "web3";
 import { SwisstronikPlugin } from "@swisstronik/web3-plugin-swisstronik";
 
-const web3 = new Web3("https://json-rpc.testnet.swisstronik.com/"); // Any RPC node you wanted to connect with
+const web3 = new Web3("https://json-rpc.mainnet.swisstronik.com/"); // Any RPC node you wanted to connect with
 web3.registerPlugin(new SwisstronikPlugin());
 
 // Get node public key
@@ -42,7 +42,7 @@ web3.swisstronik.getNodePublicKey().then((resp) => {
 import { Web3 } from "web3";
 import { SwisstronikPlugin } from "@swisstronik/web3-plugin-swisstronik";
 
-const web3 = new Web3("https://json-rpc.testnet.swisstronik.com/"); // Any RPC node you wanted to connect with
+const web3 = new Web3("https://json-rpc.mainnet.swisstronik.com/"); // Any RPC node you wanted to connect with
 web3.registerPlugin(new SwisstronikPlugin());
 let wallet = web3.eth.accounts.wallet.add("0x..."); // Private Key
 
@@ -70,7 +70,7 @@ console.log(sentTxReceipt);
 import { Web3, DEFAULT_RETURN_FORMAT } from "web3";
 import { SwisstronikPlugin } from "@swisstronik/web3-plugin-swisstronik";
 
-const web3 = new Web3("https://json-rpc.testnet.swisstronik.com/"); // Any RPC node you wanted to connect with
+const web3 = new Web3("https://json-rpc.mainnet.swisstronik.com/"); // Any RPC node you wanted to connect with
 web3.registerPlugin(new SwisstronikPlugin());
 let wallet = web3.eth.accounts.wallet.add("0x..."); // Private Key
 
@@ -99,7 +99,7 @@ import { Web3 } from "web3";
 import { SwisstronikPlugin } from "@swisstronik/web3-plugin-swisstronik";
 
 // With any RPC node and private key
-const web3 = new Web3("https://json-rpc.testnet.swisstronik.com/");
+const web3 = new Web3("https://json-rpc.mainnet.swisstronik.com/");
 const wallet = web3.eth.accounts.wallet.add("0x..."); // Private Key
 const { address: account } = wallet[0];
 
@@ -119,7 +119,7 @@ Refer to [Swisstronik Developer Docs](https://swisstronik.gitbook.io/swisstronik
 To publish a new version of the package to npm, run the following command:
 
 ```bash
-npm run build
+npm run build/
 
 npm publish
 ```
